@@ -63,6 +63,7 @@ class Hooks implements
 {
 
 	private const EXTENSION_DATA_FLAG = 'CategoryTree';
+	private static $currentTitle = null;
 
 	/** @var ILoadBalancer */
 	private $loadBalancer;
@@ -212,7 +213,22 @@ class Hooks implements
 			$depth = 0;
 		}
 
-		return $ct->getTag( $parser, $cat, $hideroot, $attr, $depth, $allowMissing );
+		$cTitle = Hooks::$currentTitle;
+		if (method_exists($cTitle, "getParentCategoryTree")) {
+			$currentCatList = self::getFlatParentCategoryList($cTitle->getParentCategoryTree());
+			$currentCatList[] = $cTitle->getText();
+		}
+
+		return $ct->getTag( $parser, $cat, $hideroot, $attr, $depth, $allowMissing, $currentCatList );
+	}
+
+	public static function getFlatParentCategoryList( $catTree ) {
+		$res = [];
+		foreach ( $catTree as $cat => $subtree ) {
+			$res[] = $cat;
+			$res = array_merge($res, self::getFlatParentCategoryList($subtree));
+		}
+		return $res;
 	}
 
 	/**
@@ -237,6 +253,7 @@ class Hooks implements
 	 * @return bool|void True or no return value to continue or false to abort
 	 */
 	public function onArticleFromTitle( $title, &$article, $context ) {
+		Hooks::$currentTitle = $title;
 		if ( $title->getNamespace() === NS_CATEGORY ) {
 			$article = new CategoryTreeCategoryPage( $title );
 		}
