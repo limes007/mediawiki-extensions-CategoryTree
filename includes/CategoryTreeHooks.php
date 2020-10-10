@@ -27,6 +27,7 @@
  * to display the category structure of a wiki
  */
 class CategoryTreeHooks {
+	private static $currentTitle = null;
 
 	private const EXTENSION_DATA_FLAG = 'CategoryTree';
 
@@ -179,7 +180,22 @@ class CategoryTreeHooks {
 			$depth = 0;
 		}
 
-		return $ct->getTag( $parser, $cat, $hideroot, $attr, $depth, $allowMissing );
+		$cTitle = CategoryTreeHooks::$currentTitle;
+		if (method_exists($cTitle, "getParentCategoryTree")) {
+			$currentCatList = self::getFlatParentCategoryList($cTitle->getParentCategoryTree());
+			$currentCatList[] = $cTitle->getText();
+		}
+
+		return $ct->getTag( $parser, $cat, $hideroot, $attr, $depth, $allowMissing, $currentCatList );
+	}
+
+	public static function getFlatParentCategoryList( $catTree ) {
+		$res = [];
+		foreach ( $catTree as $cat => $subtree ) {
+			$res[] = $cat;
+			$res = array_merge($res, self::getFlatParentCategoryList($subtree));
+		}
+		return $res;
 	}
 
 	/**
@@ -219,6 +235,8 @@ class CategoryTreeHooks {
 	 * @param Article|null &$article Article (object) that will be returned
 	 */
 	public static function articleFromTitle( Title $title, Article &$article = null ) {
+		CategoryTreeHooks::$currentTitle = $title;
+
 		if ( $title->getNamespace() == NS_CATEGORY ) {
 			$article = new CategoryTreeCategoryPage( $title );
 		}
