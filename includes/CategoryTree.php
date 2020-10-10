@@ -339,7 +339,7 @@ class CategoryTree {
 	 * @return bool|string
 	 */
 	public function getTag( ?Parser $parser, $category, $hideroot = false, array $attr = [],
-		$depth = 1, $allowMissing = false
+		$depth = 1, $allowMissing = false, $currentCatList = null
 	) {
 		global $wgCategoryTreeDisableCache;
 
@@ -381,7 +381,7 @@ class CategoryTree {
 			if ( !$hideroot ) {
 				$html = $this->renderNode( $title, $depth );
 			} else {
-				$html = $this->renderChildren( $title, $depth );
+				$html = $this->renderChildren( $title, $depth, $currentCatList );
 			}
 		}
 
@@ -395,7 +395,7 @@ class CategoryTree {
 	 * @suppress PhanUndeclaredClassMethod,PhanUndeclaredClassInstanceof
 	 * @return string
 	 */
-	public function renderChildren( Title $title, $depth = 1 ) {
+	public function renderChildren( Title $title, $depth = 1, $currentCatList = [] ) {
 		global $wgCategoryTreeMaxChildren, $wgCategoryTreeUseCategoryTable;
 
 		if ( $title->getNamespace() !== NS_CATEGORY ) {
@@ -506,7 +506,7 @@ class CategoryTree {
 				$cat = Category::newFromRow( $row, $t );
 			}
 
-			$s = $this->renderNodeInfo( $t, $cat, $depth - 1 );
+			$s = $this->renderNodeInfo( $t, $cat, $depth - 1, $currentCatList );
 
 			if ( (int)$row->page_namespace === NS_CATEGORY ) {
 				$categories .= $s;
@@ -587,8 +587,14 @@ class CategoryTree {
 	 * @param int $children
 	 * @return string
 	 */
-	public function renderNodeInfo( Title $title, Category $cat = null, $children = 0 ) {
+	public function renderNodeInfo( Title $title, Category $cat = null, $children = 0, $currentCatList = [] ) {
 		$mode = $this->getOption( 'mode' );
+
+		if ($children == 0) {
+			if (in_array($title, $currentCatList)) {
+				$children = 1;
+			}
+		}
 
 		$ns = $title->getNamespace();
 		$key = $title->getDBkey();
@@ -614,7 +620,13 @@ class CategoryTree {
 			$label = $title->getPrefixedText();
 		}
 
-		$link = $this->linkRenderer->makeLink( $title, $label );
+		$attribs = [];
+		if (($ns != NS_CATEGORY) && in_array($title, $currentCatList)) {
+			$attribs = [
+				'class' => 'CategoryTreeLabelPage CategoryTreeLabelCurrentPage'
+			];
+		}
+		$link = $this->linkRenderer->makeLink( $title, $label, $attribs );
 
 		$count = false;
 		$s = '';
@@ -658,7 +670,7 @@ class CategoryTree {
 			}
 		} else {
 			$bullet = '';
-			$attr['class'] = 'CategoryTreePageBullet';
+			//$attr['class'] = 'CategoryTreePageBullet';
 		}
 		$s .= Html::rawElement( 'span', $attr, $bullet ) . ' ';
 
@@ -678,7 +690,7 @@ class CategoryTree {
 		);
 
 		if ( $ns === NS_CATEGORY && $children > 0 ) {
-			$children = $this->renderChildren( $title, $children );
+			$children = $this->renderChildren( $title, $children, $currentCatList );
 			if ( $children === '' ) {
 				switch ( $mode ) {
 					case CategoryTreeMode::CATEGORIES:
