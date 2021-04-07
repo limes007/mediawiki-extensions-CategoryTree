@@ -263,8 +263,8 @@ class CategoryTreeHooks {
 
 		foreach ( $categories as $category => $type ) {
 			$links[$type][] = self::parserHook( $category, $wgCategoryTreePageCategoryOptions, null, null, true );
-			CategoryTree::setHeaders( $out );
 		}
+		CategoryTree::setHeaders( $out );
 
 		return false;
 	}
