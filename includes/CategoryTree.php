@@ -591,7 +591,7 @@ class CategoryTree {
 		$mode = $this->getOption( 'mode' );
 
 		if ($children == 0) {
-			if (in_array($title, $currentCatList)) {
+			if ($title && $currentCatList && in_array($title, $currentCatList)) {
 				$children = 1;
 			}
 		}

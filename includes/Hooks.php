@@ -214,7 +214,7 @@ class Hooks implements
 		}
 
 		$cTitle = Hooks::$currentTitle;
-		if (method_exists($cTitle, "getParentCategoryTree")) {
+		if ($cTitle && method_exists($cTitle, "getParentCategoryTree")) {
 			$currentCatList = self::getFlatParentCategoryList($cTitle->getParentCategoryTree());
 			$currentCatList[] = $cTitle->getText();
 		}
