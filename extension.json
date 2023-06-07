@@ -6,7 +6,7 @@
 	"license-name": "GPL-2.0-or-later",
 	"type": "parserhook",
 	"requires": {
-		"MediaWiki": ">= 1.38.0"
+		"MediaWiki": ">= 1.39.0"
 	},
 	"ConfigRegistry": {
 		"categorytree": "GlobalVarConfig::newInstance"
@@ -41,6 +41,9 @@
 	},
 	"AutoloadNamespaces": {
 		"MediaWiki\\Extension\\CategoryTree\\": "includes/"
+	},
+	"TestAutoloadNamespaces": {
+		"MediaWiki\\Extension\\CategoryTree\\Tests\\": "tests/phpunit/"
 	},
 	"ResourceModules": {
 		"ext.categoryTree": {
@@ -89,7 +92,10 @@
 	"HookHandlers": {
 		"default": {
 			"class": "MediaWiki\\Extension\\CategoryTree\\Hooks",
-			"services": [ "DBLoadBalancer", "MainConfig" ]
+			"services": [
+				"CategoryTree.CategoryCache",
+				"MainConfig"
+			]
 		},
 		"config": {
 			"class": "MediaWiki\\Extension\\CategoryTree\\ConfigHookHandler"
@@ -183,5 +189,8 @@
 			}
 		}
 	},
+	"ServiceWiringFiles": [
+		"includes/ServiceWiring.php"
+	],
 	"manifest_version": 2
 }
